@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          Role      @default(AUTHOR)
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  posts         Post[]
+}
+
+enum Role {
+  AUTHOR
+  EDITOR
+  ADMIN
+  SUPERADMIN
+}
+
+model Post {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  excerpt       String?
+  content       String
+  featuredImage String?
+  status        Status    @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  author        User      @relation(fields: [authorId], references: [id])
+  authorId      String
+  categories    CategoriesOnPosts[]
+  tags          TagsOnPosts[]
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  description   String?
+  posts         CategoriesOnPosts[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model CategoriesOnPosts {
+  post          Post      @relation(fields: [postId], references: [id])
+  postId        String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  assignedAt    DateTime  @default(now())
+
+  @@id([postId, categoryId])
+}
+
+model Tag {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  posts         TagsOnPosts[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model TagsOnPosts {
+  post          Post      @relation(fields: [postId], references: [id])
+  postId        String
+  tag           Tag       @relation(fields: [tagId], references: [id])
+  tagId         String
+  assignedAt    DateTime  @default(now())
+
+  @@id([postId, tagId])
+}
+
+model Page {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  content       String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
+model Setting {
+  id            String    @id @default(cuid())
+  key           String    @unique
+  value         String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
